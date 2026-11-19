@@ -65,6 +65,15 @@
   #kunci { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
   #kunci[hidden] { display: none; }
   #kunci .card { width: 100%; max-width: 360px; }
+  .foto img { cursor: zoom-in; }
+  #lihat { position: fixed; inset: 0; background: rgba(0,0,0,.94); z-index: 20; display: flex; flex-direction: column; }
+  #lihat[hidden] { display: none; }
+  #lihat .bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; color: #fff; font-size: 14px; background: #000; }
+  #lihat .bar button { background: rgba(255,255,255,.16); color: #fff; padding: 8px 12px; }
+  #lihat .area { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; touch-action: pan-x pan-y pinch-zoom; }
+  #lihat img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  #lihat.zoom .area { display: block; }
+  #lihat.zoom img { max-width: none; max-height: none; width: 220%; }
 </style>
 </head>
 <body>
@@ -75,6 +84,10 @@
   <div id="pinErr"></div>
   <button class="primary" id="masuk" style="width:100%">Masuk</button>
 </div></div>
+<div id="lihat" hidden>
+  <div class="bar"><span id="lihatJudul"></span><span><button id="lihatZoom">🔍 Perbesar</button> <button id="lihatTutup">✕ Tutup</button></span></div>
+  <div class="area"><img id="lihatImg" alt="Foto nota"></div>
+</div>
 <header>
   <h1>Kas Wahana Billiard &amp; Cafe</h1>
   <div class="sub" id="judulFile">Memuat…</div>
@@ -256,6 +269,30 @@ function renderBaris(en, b, i) {
   return box;
 }
 
+function judulEntri(en, no) {
+  return (en.mode === 'pemasukan' ? 'Pemasukan ' : en.mode === 'transfer' ? 'Setor ' : 'Nota ') + no;
+}
+
+// ------------------------------------------------------------ pratinjau foto
+function lihatFoto(src, judul) {
+  const l = $('#lihat');
+  l.classList.remove('zoom');
+  $('#lihatZoom').textContent = '🔍 Perbesar';
+  $('#lihatImg').src = src;
+  $('#lihatJudul').textContent = judul;
+  l.hidden = false;
+  try { history.pushState({ lihat: 1 }, ''); } catch (e) { /* abaikan */ }
+}
+function tutupFoto() {
+  if ($('#lihat').hidden) return;
+  $('#lihat').hidden = true;
+  try { if (history.state && history.state.lihat) history.back(); } catch (e) { /* abaikan */ }
+}
+function zoomFoto() {
+  const z = $('#lihat').classList.toggle('zoom');
+  $('#lihatZoom').textContent = z ? '↩ Pas layar' : '🔍 Perbesar';
+}
+
 function renderEntri(en, no) {
   const fileInput = el('input', { type: 'file', accept: 'image/*', style: 'display:none', onchange: async (e) => {
     const f = e.target.files[0]; if (!f) return;
@@ -263,14 +300,17 @@ function renderEntri(en, no) {
     render();
   } });
   const card = el('div', { class: 'card' },
-    el('h3', {}, el('span', {}, (en.mode === 'pemasukan' ? 'Pemasukan ' : en.mode === 'transfer' ? 'Setor ' : 'Nota ') + no),
+    el('h3', {}, el('span', {}, judulEntri(en, no)),
       el('button', { class: 'ghost', onclick: () => { entri = entri.filter(x => x !== en); render(); } }, 'Hapus')),
     el('div', { class: 'foto' },
-      en.gambar ? el('img', { src: en.gambar.preview, alt: 'foto' }) : [],
+      en.gambar ? el('img', { src: en.gambar.preview, alt: 'foto', title: 'Ketuk untuk melihat foto',
+        onclick: () => lihatFoto(en.gambar.preview, judulEntri(en, no)) }) : [],
       el('div', { class: 'pilih' },
         fileInput,
         el('button', { style: 'width:100%', onclick: () => fileInput.click() }, en.gambar ? 'Ganti foto' : '📷 Ambil / pilih foto'),
-        en.gambar ? el('button', { class: 'ghost', onclick: () => { en.gambar = null; render(); } }, 'hapus foto') : [])),
+        en.gambar ? el('div', { class: 'row' },
+          el('button', { class: 'ghost', onclick: () => lihatFoto(en.gambar.preview, judulEntri(en, no)) }, '🔍 Lihat foto'),
+          el('button', { class: 'ghost', onclick: () => { en.gambar = null; render(); } }, 'hapus foto')) : [])),
     el('textarea', { placeholder: PLACEHOLDER[en.mode], oninput: (e) => { en.catatan = e.target.value; } }, en.catatan),
     el('div', { class: 'btns' },
       el('button', { class: 'primary', disabled: en.sibuk || !setup, onclick: () => analisa(en) },
@@ -364,6 +404,11 @@ function mulai() {
   if (tersimpan) { pin = tersimpan; $('#kunci').hidden = true; muatSetup(); }
   else tampilKunci('');
 }
+$('#lihatTutup').addEventListener('click', tutupFoto);
+$('#lihatZoom').addEventListener('click', zoomFoto);
+$('#lihatImg').addEventListener('dblclick', zoomFoto);
+window.addEventListener('popstate', () => { $('#lihat').hidden = true; });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') tutupFoto(); });
 $('#masuk').addEventListener('click', masuk);
 $('#pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') masuk(); });
 
