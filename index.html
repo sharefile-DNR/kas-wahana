@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kas Wahana</title>
+<meta name="theme-color" content="#1f3a68">
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --ink: #1d2433; --muted: #6b7280; --line: #e3e6eb;
+    --brand: #1f3a68; --in: #11845b; --out: #c2410c; --trf: #6d28d9; --warn-bg: #fff7e6; --warn: #92400e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #11151c; --card: #1b212b; --ink: #e8ebf1; --muted: #9aa3b2; --line: #2c3442;
+      --brand: #8fb0ff; --in: #34d399; --out: #fb923c; --trf: #c4b5fd; --warn-bg: #3a2a10; --warn: #fcd34d; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); padding-bottom: 96px; }
+  header { background: var(--brand); color: #fff; padding: 14px 16px 10px; }
+  @media (prefers-color-scheme: dark) { header { background: #1f3a68; } }
+  header h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
+  header .sub { font-size: 12px; opacity: .85; margin-top: 2px; min-height: 16px; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  label.small { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  input, select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+  textarea { min-height: 64px; resize: vertical; }
+  button { border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; background: var(--line); }
+  button.primary { background: var(--brand); color: #fff; }
+  @media (prefers-color-scheme: dark) { button.primary { background: #3b63b5; } }
+  button.ghost { background: transparent; color: var(--muted); padding: 6px 8px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .tabs { display: flex; gap: 6px; margin: 12px 0; }
+  .tabs button { flex: 1; background: var(--card); border: 1px solid var(--line); font-weight: 600; }
+  .tabs button.on[data-mode=pengeluaran] { background: var(--out); color: #fff; border-color: var(--out); }
+  .tabs button.on[data-mode=pemasukan] { background: var(--in); color: #fff; border-color: var(--in); }
+  .tabs button.on[data-mode=transfer] { background: var(--trf); color: #fff; border-color: var(--trf); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .foto { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .foto img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+  .foto .pilih { flex: 1; }
+  .btns { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .btns button { flex: 1; min-width: 120px; }
+  .warn { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-top: 8px; white-space: pre-line; }
+  .err { background: #fde8e8; color: #9b1c1c; border-radius: 8px; padding: 8px 10px; font-size: 13px; margin: 8px 0; white-space: pre-line; }
+  @media (prefers-color-scheme: dark) { .err { background: #3b1414; color: #fca5a5; } }
+  .baris { border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .baris .full { grid-column: 1 / -1; }
+  .baris .jenis { font-weight: 700; }
+  .baris[data-tabel=income] .jenis { color: var(--in); }
+  .baris[data-tabel=expense] .jenis { color: var(--out); }
+  .baris[data-tabel=transfer] .jenis { color: var(--trf); }
+  .subtotal { text-align: right; font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; }
+  .footer .wrap { padding: 0; display: flex; gap: 10px; align-items: center; }
+  .footer .info { flex: 1; font-size: 13px; color: var(--muted); }
+  .hasil { font-size: 13px; }
+  .hasil li { margin: 2px 0; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: s .7s linear infinite; vertical-align: -2px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .muted { color: var(--muted); font-size: 13px; }
+  #kunci { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+  #kunci[hidden] { display: none; }
+  #kunci .card { width: 100%; max-width: 360px; }
+</style>
+</head>
+<body>
+<div id="kunci"><div class="card">
+  <h3>Kas Wahana — masukkan PIN</h3>
+  <input type="password" id="pin" inputmode="numeric" autocomplete="current-password" placeholder="PIN">
+  <label class="muted" style="display:flex;gap:6px;align-items:center;margin:8px 0"><input type="checkbox" id="ingat" style="width:auto" checked> Ingat di perangkat ini</label>
+  <div id="pinErr"></div>
+  <button class="primary" id="masuk" style="width:100%">Masuk</button>
+</div></div>
+<header>
+  <h1>Kas Wahana Billiard &amp; Cafe</h1>
+  <div class="sub" id="judulFile">Memuat…</div>
+</header>
+
+<div class="wrap">
+  <div class="row">
+    <div style="flex:1"><label class="small" for="tgl">Tanggal transaksi</label><input type="date" id="tgl"></div>
+  </div>
+  <div class="tabs">
+    <button data-mode="pengeluaran" class="on">Pengeluaran</button>
+    <button data-mode="pemasukan">Pemasukan</button>
+    <button data-mode="transfer">Setor</button>
+  </div>
+  <div id="pesanGlobal"></div>
+  <div id="daftar"></div>
+  <button id="tambah" style="width:100%">+ Tambah nota / foto</button>
+  <p class="muted" id="petunjuk"></p>
+  <div id="hasil"></div>
+</div>
+
+<div class="footer"><div class="wrap">
+  <div class="info" id="ringkas">Belum ada baris.</div>
+  <button class="primary" id="simpan" disabled>Simpan ke spreadsheet</button>
+</div></div>
+
+<script>
+const PETUNJUK = {
+  pengeluaran: 'Foto nota/struk lalu tulis keterangan, mis. "cash, gula & esbat bahan minuman, sabun kebersihan". Tanpa foto juga bisa: "beli esbat 17rb cash".',
+  pemasukan: 'Foto laporan shift (AI membaca tunai & QRIS), atau tulis mis. "shift malam Dipan tunai 228rb qris 190rb".',
+  transfer: 'Setoran / pindah uang antar akun, mis. "setor tunai 7jt ke BNI STOR".',
+};
+const PLACEHOLDER = {
+  pengeluaran: 'Keterangan: akun (cash/qris) + kategori per item, mis. "cash. omela & gula bahan minuman, sabun kebersihan"',
+  pemasukan: 'Keterangan, mis. "laporan shift siang" atau "sewa meja event 500rb qris"',
+  transfer: 'mis. "setor 7jt dari CASH ke BNI STOR"',
+};
+const JENIS = { income: 'Pemasukan', expense: 'Pengeluaran', transfer: 'Setor/Transfer' };
+const MODE_TABEL = { pengeluaran: 'expense', pemasukan: 'income', transfer: 'transfer' };
+
+let mode = 'pengeluaran';
+let setupCache = {};
+let setup = null;
+let entri = [];
+let nextId = 1;
+let pin = '';
+
+const $ = (s) => document.querySelector(s);
+function el(tag, attrs, ...anak) {
+  const e = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => {
+    if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k === 'class') e.className = v;
+    else if (v !== undefined && v !== null && v !== false) e.setAttribute(k, v === true ? '' : v);
+  });
+  anak.flat().forEach(a => e.append(a instanceof Node ? a : document.createTextNode(a == null ? '' : a)));
+  return e;
+}
+const rp = (n) => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+const hariIni = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const API = 'https://script.google.com/macros/s/AKfycby09nZKYeFqBbuZvAXGlWEmwFv5bmNzgd6HwBnOsgvNHXZKmk9g7D118NUzx5xgHOnu/exec';
+async function panggil(fn, ...args) {
+  let res;
+  try {
+    res = await fetch(API, { method: 'POST', body: JSON.stringify({ fn, args }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+  } catch (e) { throw new Error('Tidak bisa terhubung ke server. Periksa koneksi internet.'); }
+  let j;
+  try { j = await res.json(); } catch (e) { throw new Error('Jawaban server tidak valid (' + res.status + ').'); }
+  if (!j.ok) throw new Error(j.error);
+  return j.data;
+}
+
+// ------------------------------------------------------------ setup
+async function muatSetup() {
+  const tgl = $('#tgl').value;
+  const bln = tgl.slice(0, 7);
+  $('#judulFile').textContent = 'Memuat daftar kategori…';
+  try {
+    if (!setupCache[bln]) setupCache[bln] = await panggil('getSetup', tgl, pin);
+    setup = setupCache[bln];
+    $('#judulFile').textContent = 'File: ' + setup.judul;
+    $('#pesanGlobal').replaceChildren();
+  } catch (e) {
+    if (cekKunci(e)) return;
+    setup = null;
+    $('#judulFile').textContent = 'File bulan ini tidak ditemukan';
+    $('#pesanGlobal').replaceChildren(el('div', { class: 'err' }, e.message || String(e)));
+  }
+  render();
+}
+
+// ------------------------------------------------------------ gambar
+function kecilkan(file) {
+  return new Promise((ok, gagal) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const maks = 1600, s = Math.min(1, maks / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      const dataUrl = c.toDataURL('image/jpeg', 0.85);
+      ok({ mime: 'image/jpeg', data: dataUrl.split(',')[1], preview: dataUrl });
+    };
+    img.onerror = () => gagal(new Error('Gambar tidak bisa dibaca'));
+    img.src = url;
+  });
+}
+
+// ------------------------------------------------------------ entri & baris
+function entriBaru() {
+  entri.push({ id: nextId++, mode, gambar: null, catatan: '', baris: [], masalah: [], sibuk: false, error: '' });
+  render();
+}
+function barisKosong(m) {
+  const tabel = MODE_TABEL[m];
+  const b = { tabel, tanggal: $('#tgl').value, jumlah: '', keterangan: '' };
+  if (setup) {
+    if (tabel === 'income') { b.kategori = setup.kategoriIncome[0]; b.akun = 'CASH'; }
+    if (tabel === 'expense') { b.kategori = ''; b.akun = 'CASH'; b.nama_item = ''; b.qty = ''; }
+    if (tabel === 'transfer') { b.akun_dari = 'CASH'; b.akun_tujuan = setup.akun[setup.akun.length - 1]; }
+  }
+  return b;
+}
+async function analisa(en) {
+  if (!en.gambar && !en.catatan.trim()) { en.error = 'Isi foto atau keterangan dulu.'; render(); return; }
+  en.sibuk = true; en.error = ''; render();
+  try {
+    const h = await panggil('analisa', { pin, mode: en.mode, tanggal: $('#tgl').value, catatan: en.catatan,
+      gambar: en.gambar ? { mime: en.gambar.mime, data: en.gambar.data } : null });
+    en.baris = h.baris.map(b => Object.assign({ qty: '', nama_item: '' }, b, { qty: b.qty == null ? '' : b.qty }));
+    en.masalah = h.masalah;
+    if (!en.baris.length) en.error = 'AI tidak menemukan transaksi. Tambahkan baris manual atau perjelas keterangan.';
+  } catch (e) { if (!cekKunci(e)) en.error = e.message || String(e); }
+  en.sibuk = false; render();
+}
+
+function pilihan(opsi, nilai, onchange, kosong) {
+  const s = el('select', { onchange: (e) => onchange(e.target.value) },
+    kosong ? el('option', { value: '' }, kosong) : [],
+    opsi.map(o => el('option', { value: o, selected: o === nilai }, o)));
+  if (nilai && opsi.indexOf(nilai) < 0) s.prepend(el('option', { value: nilai, selected: true }, nilai + ' (tidak ada di SETUP)'));
+  return s;
+}
+function field(label, input, full) {
+  return el('div', { class: full ? 'full' : '' }, el('label', { class: 'small' }, label), input);
+}
+
+function renderBaris(en, b, i) {
+  const set = (k) => (v) => { b[k] = v; renderRingkas(); };
+  const s = setup || { akun: [], kategoriIncome: [], kategoriExpense: [] };
+  const box = el('div', { class: 'baris', 'data-tabel': b.tabel },
+    el('div', { class: 'full row' },
+      el('select', { class: 'jenis', onchange: (e) => {
+        const simpanDulu = { jumlah: b.jumlah, keterangan: b.keterangan, tanggal: b.tanggal };
+        const baru = barisKosong({ income: 'pemasukan', expense: 'pengeluaran', transfer: 'transfer' }[e.target.value]);
+        Object.keys(b).forEach(k => delete b[k]);
+        Object.assign(b, baru, simpanDulu);
+        render();
+      } }, Object.keys(JENIS).map(k => el('option', { value: k, selected: k === b.tabel }, JENIS[k]))),
+      el('button', { class: 'ghost', title: 'Hapus baris', onclick: () => { en.baris.splice(i, 1); render(); } }, '✕')),
+    field('Jumlah (Rp)', el('input', { type: 'number', inputmode: 'numeric', min: 0, value: b.jumlah, oninput: (e) => set('jumlah')(e.target.value) })),
+    field('Tanggal', el('input', { type: 'date', value: b.tanggal, onchange: (e) => set('tanggal')(e.target.value) })),
+  );
+  if (b.tabel === 'transfer') {
+    box.append(field('Dari akun', pilihan(s.akun, b.akun_dari, set('akun_dari'))),
+      field('Ke akun', pilihan(s.akun, b.akun_tujuan, set('akun_tujuan'))));
+  } else {
+    box.append(field('Kategori', pilihan(b.tabel === 'income' ? s.kategoriIncome : s.kategoriExpense, b.kategori, set('kategori'), '— pilih —')),
+      field('Akun', pilihan(s.akun, b.akun, set('akun'))));
+  }
+  box.append(field('Keterangan', el('input', { value: b.keterangan || '', oninput: (e) => set('keterangan')(e.target.value) }), b.tabel !== 'expense'));
+  if (b.tabel === 'expense') {
+    box.append(field('Nama item (stok)', el('input', { value: b.nama_item || '', list: 'daftarItem', placeholder: 'kosongkan bila bukan barang', oninput: (e) => set('nama_item')(e.target.value) })),
+      field('Qty', el('input', { type: 'number', step: 'any', min: 0, value: b.qty, oninput: (e) => set('qty')(e.target.value) })));
+  }
+  return box;
+}
+
+function renderEntri(en, no) {
+  const fileInput = el('input', { type: 'file', accept: 'image/*', style: 'display:none', onchange: async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { en.gambar = await kecilkan(f); } catch (err) { en.error = err.message; }
+    render();
+  } });
+  const card = el('div', { class: 'card' },
+    el('h3', {}, el('span', {}, (en.mode === 'pemasukan' ? 'Pemasukan ' : en.mode === 'transfer' ? 'Setor ' : 'Nota ') + no),
+      el('button', { class: 'ghost', onclick: () => { entri = entri.filter(x => x !== en); render(); } }, 'Hapus')),
+    el('div', { class: 'foto' },
+      en.gambar ? el('img', { src: en.gambar.preview, alt: 'foto' }) : [],
+      el('div', { class: 'pilih' },
+        fileInput,
+        el('button', { style: 'width:100%', onclick: () => fileInput.click() }, en.gambar ? 'Ganti foto' : '📷 Ambil / pilih foto'),
+        en.gambar ? el('button', { class: 'ghost', onclick: () => { en.gambar = null; render(); } }, 'hapus foto') : [])),
+    el('textarea', { placeholder: PLACEHOLDER[en.mode], oninput: (e) => { en.catatan = e.target.value; } }, en.catatan),
+    el('div', { class: 'btns' },
+      el('button', { class: 'primary', disabled: en.sibuk || !setup, onclick: () => analisa(en) },
+        en.sibuk ? [el('span', { class: 'spin' }), ' Menganalisa…'] : '✨ Analisa AI'),
+      el('button', { disabled: !setup, onclick: () => { en.baris.push(barisKosong(en.mode)); render(); } }, '+ Baris manual')),
+    en.error ? el('div', { class: 'err' }, en.error) : [],
+    en.masalah.length ? el('div', { class: 'warn' }, 'Periksa: \n• ' + en.masalah.join('\n• ')) : [],
+    en.baris.map((b, i) => renderBaris(en, b, i)),
+    en.baris.length ? el('div', { class: 'subtotal' }, 'Subtotal: ' + rp(en.baris.reduce((a, b) => a + Number(b.jumlah || 0), 0))) : [],
+  );
+  return card;
+}
+
+function renderRingkas() {
+  const semua = entri.flatMap(e => e.baris);
+  const sum = (t) => semua.filter(b => b.tabel === t).reduce((a, b) => a + Number(b.jumlah || 0), 0);
+  $('#ringkas').textContent = semua.length
+    ? semua.length + ' baris · masuk ' + rp(sum('income')) + ' · keluar ' + rp(sum('expense')) + (sum('transfer') ? ' · setor ' + rp(sum('transfer')) : '')
+    : 'Belum ada baris.';
+  $('#simpan').disabled = !semua.length || !setup;
+}
+
+function render() {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  $('#petunjuk').textContent = PETUNJUK[mode];
+  const milik = entri.filter(e => e.mode === mode);
+  $('#daftar').replaceChildren(...milik.map((e, i) => renderEntri(e, i + 1)));
+  let dl = document.getElementById('daftarItem');
+  if (!dl) { dl = el('datalist', { id: 'daftarItem' }); document.body.append(dl); }
+  dl.replaceChildren(...((setup && setup.item) || []).map(n => el('option', { value: n })));
+  renderRingkas();
+}
+
+async function simpan() {
+  const isi = entri.filter(e => e.baris.length);
+  const kurang = isi.flatMap(e => e.baris).filter(b => !Number(b.jumlah) || (b.tabel !== 'transfer' && !b.kategori));
+  if (kurang.length) { alert('Ada ' + kurang.length + ' baris yang jumlah atau kategorinya belum diisi.'); return; }
+  const btn = $('#simpan');
+  btn.disabled = true; btn.replaceChildren(el('span', { class: 'spin' }), ' Menyimpan…');
+  try {
+    const hasil = await panggil('simpan', { pin, entri: isi.map(e => ({
+      gambar: e.gambar ? { mime: e.gambar.mime, data: e.gambar.data } : null,
+      baris: e.baris.map(b => Object.assign({}, b)),
+    })) });
+    entri = entri.filter(e => !e.baris.length);
+    $('#hasil').replaceChildren(el('div', { class: 'card hasil' },
+      el('h3', {}, '✅ Tersimpan (' + hasil.length + ')'),
+      el('ul', {}, hasil.map(h => el('li', {}, (h.tabel === 'item baru' ? 'Item baru di ITEM TRACKER: ' + h.ket
+        : JENIS[h.tabel] + ' baris ' + h.baris + ' — ' + rp(h.jumlah) + ' ' + (h.ket || '')))))));
+  } catch (e) {
+    if (!cekKunci(e)) $('#hasil').replaceChildren(el('div', { class: 'err' }, e.message || String(e)));
+  }
+  btn.textContent = 'Simpan ke spreadsheet';
+  render();
+  $('#hasil').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ------------------------------------------------------------ PIN
+function storage(fn) { try { return fn(window.localStorage); } catch (e) { return null; } }
+function tampilKunci(pesan) {
+  $('#kunci').hidden = false;
+  $('#pinErr').replaceChildren(pesan ? el('div', { class: 'err' }, pesan) : '');
+  $('#pin').focus();
+}
+function cekKunci(e) {
+  const m = (e && e.message) || String(e);
+  if (/PIN salah|PIN form belum|Terlalu banyak PIN/.test(m)) {
+    storage(s => s.removeItem('kasPin'));
+    pin = '';
+    tampilKunci(m);
+    return true;
+  }
+  return false;
+}
+async function masuk() {
+  const p = $('#pin').value.trim();
+  if (!p) return;
+  $('#masuk').disabled = true;
+  try {
+    await panggil('cekPin', p);
+    pin = p;
+    if ($('#ingat').checked) storage(s => s.setItem('kasPin', p));
+    $('#kunci').hidden = true;
+    $('#pin').value = '';
+    muatSetup();
+  } catch (e) { tampilKunci(e.message || String(e)); }
+  $('#masuk').disabled = false;
+}
+function mulai() {
+  const tersimpan = storage(s => s.getItem('kasPin'));
+  if (tersimpan) { pin = tersimpan; $('#kunci').hidden = true; muatSetup(); }
+  else tampilKunci('');
+}
+$('#masuk').addEventListener('click', masuk);
+$('#pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') masuk(); });
+
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  mode = b.dataset.mode;
+  if (!entri.some(e => e.mode === mode)) entriBaru(); else render();
+}));
+$('#tambah').addEventListener('click', entriBaru);
+$('#simpan').addEventListener('click', simpan);
+let tglLama = hariIni();
+$('#tgl').addEventListener('change', () => {
+  // Baris yang tanggalnya masih ikut tanggal form diikutkan; tanggal dari nota (beda) dibiarkan.
+  entri.forEach(e => e.baris.forEach(b => { if (b.tanggal === tglLama) b.tanggal = $('#tgl').value; }));
+  tglLama = $('#tgl').value;
+  muatSetup();
+});
+$('#tgl').value = tglLama;
+entriBaru();
+mulai();
+</script>
+</body>
+</html>
